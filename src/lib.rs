@@ -118,7 +118,8 @@ unsafe impl<const SIZE: usize> Allocator for StackAllocator<SIZE> {
         let new_index = aligned + size;
         if new_index <= SIZE {
             self.index = new_index;
-            let ptr = unsafe { NonNull::new_unchecked(self.stack.as_ptr().add(aligned) as *mut _) };
+            let ptr =
+                unsafe { NonNull::new_unchecked(self.stack.as_mut_ptr().cast::<T>().add(aligned)) };
             Some(Block { ptr, count })
         } else {
             None
@@ -236,8 +237,17 @@ mod tests {
 
     #[test]
     fn stack_allocation() {
-        make_static! {Foo => StackAllocator<5>, StackAllocator::new()}
+        make_static! {Foo => StackAllocator<4>, StackAllocator::new()}
         let my_box = Box::new_in(8008135_i32, Foo).unwrap();
         assert_eq!(my_box.get(), &8008135);
+    }
+
+    #[test]
+    fn stack_allocation_multiple() {
+        make_static! {Foo => StackAllocator<8>, StackAllocator::new()}
+        let box1 = Box::new_in(123456789_i32, Foo).unwrap();
+        let box2 = Box::new_in(314159265_i32, Foo).unwrap();
+        assert_eq!(box1.get(), &123456789);
+        assert_eq!(box2.get(), &314159265);
     }
 }
