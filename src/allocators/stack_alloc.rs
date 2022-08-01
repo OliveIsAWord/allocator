@@ -13,7 +13,7 @@ pub struct StackAllocator<'a> {
 impl<'a> StackAllocator<'a> {
     /// # Safety
     ///
-    /// Don't drop it! :3
+    /// Unclear. This function might always be safe to call.
     #[must_use]
     pub const unsafe fn new(slice: &'a mut [MaybeUninit<u8>]) -> Self {
         Self {
