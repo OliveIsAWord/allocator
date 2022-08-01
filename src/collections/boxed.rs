@@ -1,4 +1,4 @@
-use crate::utility::from_raw_parts;
+use crate::utility::make_slice_ptr;
 use crate::StaticAllocator;
 
 use std::mem;
@@ -37,7 +37,7 @@ where
     A: StaticAllocator,
 {
     fn drop(&mut self) {
-        let block = from_raw_parts(self.ptr, 1);
+        let block = make_slice_ptr(self.ptr, 1);
         unsafe {
             ptr::drop_in_place(self.ptr.as_ptr());
             self.alloc.deallocate(block);
