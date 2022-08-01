@@ -1,10 +1,12 @@
 mod fallback_alloc;
 mod null_alloc;
 mod stack_alloc;
+mod system_alloc;
 
 pub use fallback_alloc::FallbackAllocator;
 pub use null_alloc::NullAllocator;
 pub use stack_alloc::StackAllocator;
+pub use system_alloc::SystemAllocator;
 
 // impl Allocator for TODO {
 //     fn allocate<T>(&mut self, count: usize) -> Option<NonNull<[T]>> { todo!() }
