@@ -1,5 +1,5 @@
 use crate::utility::make_slice_ptr;
-use crate::StaticAllocator;
+use crate::{AllocResult, StaticAllocator};
 
 use std::mem;
 use std::ptr::{self, NonNull};
@@ -16,11 +16,10 @@ impl<T, A> Box<T, A>
 where
     A: StaticAllocator,
 {
-    #[allow(clippy::missing_panics_doc)]
-    pub fn new_in(value: T, alloc: A) -> Option<Self> {
+    pub fn new_in(value: T, alloc: A) -> AllocResult<Self> {
         alloc.allocate::<T>(1).map(|ptr| {
             let ptr = ptr.cast::<T>(); // cast pointer of [T] of length 1 to pointer of T
-            assert_eq!(ptr.as_ptr() as usize % mem::align_of::<T>(), 0); // sanity check: is pointer correctly aligned?
+            debug_assert_eq!(ptr.as_ptr() as usize % mem::align_of::<T>(), 0); // sanity check: is pointer correctly aligned?
             unsafe {
                 *ptr.as_ptr() = value;
             }

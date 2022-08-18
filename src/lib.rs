@@ -1,5 +1,6 @@
-#![feature(slice_ptr_get)]
 #![feature(const_mut_refs)]
+#![feature(slice_ptr_get)]
+#![feature(yeet_expr)]
 #![warn(unsafe_op_in_unsafe_fn)]
 
 pub mod allocators;
@@ -8,6 +9,10 @@ mod traits;
 pub(crate) mod utility;
 
 pub use traits::{Allocator, StaticAllocator};
+
+#[derive(Clone, Copy, Debug)]
+pub struct AllocError;
+pub type AllocResult<T = ()> = Result<T, AllocError>;
 
 #[macro_export]
 macro_rules! make_static {
@@ -21,7 +26,7 @@ macro_rules! make_static {
             }
         }
         unsafe impl $crate::StaticAllocator for $new_type {
-            fn allocate<T>(&self, count: usize) -> Option<::std::ptr::NonNull<[T]>> {
+            fn allocate<T>(&self, count: usize) -> AllocResult<::std::ptr::NonNull<[T]>> {
                 Self::get_alloc().allocate(count)
             }
             fn owns<T>(&self, block: ::std::ptr::NonNull<[T]>) -> bool {

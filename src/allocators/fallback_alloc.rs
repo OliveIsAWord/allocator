@@ -1,4 +1,4 @@
-use crate::{Allocator, StaticAllocator};
+use crate::{AllocResult, Allocator, StaticAllocator};
 
 use std::ptr::NonNull;
 
@@ -12,10 +12,10 @@ where
     A: Allocator,
     B: Allocator,
 {
-    fn allocate<T>(&mut self, count: usize) -> Option<NonNull<[T]>> {
+    fn allocate<T>(&mut self, count: usize) -> AllocResult<NonNull<[T]>> {
         self.primary
             .allocate(count)
-            .or_else(|| self.fallback.allocate(count))
+            .or_else(|_| self.fallback.allocate(count))
     }
     fn owns<T>(&self, block: NonNull<[T]>) -> bool {
         self.primary.owns(block) || self.fallback.owns(block)
@@ -34,10 +34,10 @@ where
     A: StaticAllocator,
     B: StaticAllocator,
 {
-    fn allocate<T>(&self, count: usize) -> Option<NonNull<[T]>> {
+    fn allocate<T>(&self, count: usize) -> AllocResult<NonNull<[T]>> {
         self.primary
             .allocate(count)
-            .or_else(|| self.fallback.allocate(count))
+            .or_else(|_| self.fallback.allocate(count))
     }
     fn owns<T>(&self, block: NonNull<[T]>) -> bool {
         self.primary.owns(block) || self.fallback.owns(block)

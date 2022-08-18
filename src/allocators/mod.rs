@@ -14,7 +14,7 @@ pub use system_alloc::SystemAllocator;
 //     unsafe fn deallocate<T>(&mut self, block: NonNull<[T]>) { todo!() }
 // }
 
-use crate::{Allocator, StaticAllocator};
+use crate::{AllocResult, Allocator, StaticAllocator};
 use std::ptr::NonNull;
 use std::sync::Mutex;
 
@@ -37,7 +37,7 @@ unsafe impl<A> StaticAllocator for Mutex<A>
 where
     A: Allocator,
 {
-    fn allocate<T>(&self, count: usize) -> Option<NonNull<[T]>> {
+    fn allocate<T>(&self, count: usize) -> AllocResult<NonNull<[T]>> {
         self.lock().unwrap().allocate(count)
     }
     fn owns<T>(&self, block: NonNull<[T]>) -> bool {

@@ -1,4 +1,4 @@
-use crate::{Allocator, StaticAllocator};
+use crate::{AllocError, AllocResult, Allocator, StaticAllocator};
 
 use std::mem::MaybeUninit;
 use std::ptr::NonNull;
@@ -6,7 +6,7 @@ use std::ptr::NonNull;
 pub struct SystemAllocator;
 
 unsafe impl Allocator for SystemAllocator {
-    fn allocate<T>(&mut self, count: usize) -> Option<NonNull<[T]>> {
+    fn allocate<T>(&mut self, count: usize) -> AllocResult<NonNull<[T]>> {
         StaticAllocator::allocate(self, count)
     }
     fn owns<T>(&self, block: NonNull<[T]>) -> bool {
@@ -20,12 +20,12 @@ unsafe impl Allocator for SystemAllocator {
 }
 
 unsafe impl StaticAllocator for SystemAllocator {
-    fn allocate<T>(&self, count: usize) -> Option<NonNull<[T]>> {
+    fn allocate<T>(&self, count: usize) -> AllocResult<NonNull<[T]>> {
         let mut vec: Vec<MaybeUninit<T>> = Vec::new();
-        vec.try_reserve(count).ok()?;
+        vec.try_reserve(count).map_err(|_| AllocError)?;
         let ptr = Box::into_raw(vec.into_boxed_slice()) as *mut [T];
         // SAFETY: Box always returns a non-null pointer.
-        Some(unsafe { NonNull::new_unchecked(ptr) })
+        Ok(unsafe { NonNull::new_unchecked(ptr) })
     }
     fn owns<T>(&self, _block: NonNull<[T]>) -> bool {
         panic!("can't detect ownership of system allocation")

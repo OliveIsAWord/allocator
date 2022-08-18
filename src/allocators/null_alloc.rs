@@ -1,13 +1,15 @@
-use crate::{Allocator, StaticAllocator};
+use crate::{AllocError, AllocResult, Allocator, StaticAllocator};
 
 use std::ptr::NonNull;
+
+// TODO: Dedup this code
 
 //#[derive(Clone, Copy, Debug)]
 pub struct NullAllocator;
 
 unsafe impl Allocator for NullAllocator {
-    fn allocate<T>(&mut self, _count: usize) -> Option<NonNull<[T]>> {
-        None
+    fn allocate<T>(&mut self, _count: usize) -> AllocResult<NonNull<[T]>> {
+        Err(AllocError)
     }
     fn owns<T>(&self, _block: NonNull<[T]>) -> bool {
         false
@@ -18,8 +20,8 @@ unsafe impl Allocator for NullAllocator {
 }
 
 unsafe impl StaticAllocator for NullAllocator {
-    fn allocate<T>(&self, _count: usize) -> Option<NonNull<[T]>> {
-        None
+    fn allocate<T>(&self, _count: usize) -> AllocResult<NonNull<[T]>> {
+        Err(AllocError)
     }
     fn owns<T>(&self, _block: NonNull<[T]>) -> bool {
         false

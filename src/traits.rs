@@ -1,10 +1,11 @@
+use crate::AllocResult;
 use std::ptr::NonNull;
 
 /// # Safety
 ///
 /// TODO
 pub unsafe trait Allocator {
-    fn allocate<T>(&mut self, count: usize) -> Option<NonNull<[T]>>;
+    fn allocate<T>(&mut self, count: usize) -> AllocResult<NonNull<[T]>>;
 
     fn owns<T>(&self, block: NonNull<[T]>) -> bool;
 
@@ -18,7 +19,7 @@ pub unsafe trait Allocator {
 ///
 /// TODO
 pub unsafe trait StaticAllocator {
-    fn allocate<T>(&self, count: usize) -> Option<NonNull<[T]>>;
+    fn allocate<T>(&self, count: usize) -> AllocResult<NonNull<[T]>>;
 
     fn owns<T>(&self, block: NonNull<[T]>) -> bool;
 

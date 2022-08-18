@@ -1,4 +1,4 @@
-use crate::Allocator;
+use crate::{AllocError, AllocResult, Allocator};
 
 use std::marker::PhantomData;
 use std::mem::{self, MaybeUninit};
@@ -30,19 +30,21 @@ impl<'a> StackAllocator<'a> {
 }
 
 unsafe impl Allocator for StackAllocator<'_> {
-    fn allocate<T>(&mut self, count: usize) -> Option<NonNull<[T]>> {
+    fn allocate<T>(&mut self, count: usize) -> AllocResult<NonNull<[T]>> {
         let offset = self.stack.as_ptr().cast::<u8>() as usize;
         let aligned = self.index + negative_rem_euclid(offset + self.index, mem::align_of::<T>());
         let size = count * mem::size_of::<T>();
         let new_index = aligned + size;
-        (new_index <= self.size()).then(|| {
-            self.index = new_index;
-            unsafe {
-                NonNull::new_unchecked(
-                    self.stack.as_ptr().get_unchecked_mut(aligned..new_index) as *mut [T]
-                )
-            }
-        })
+        (new_index <= self.size())
+            .then(|| {
+                self.index = new_index;
+                unsafe {
+                    NonNull::new_unchecked(
+                        self.stack.as_ptr().get_unchecked_mut(aligned..new_index) as *mut [T],
+                    )
+                }
+            })
+            .ok_or(AllocError)
     }
     fn owns<T>(&self, block: NonNull<[T]>) -> bool {
         let ptr = block.as_ptr().cast::<u8>();
@@ -107,7 +109,7 @@ mod tests {
         make_static! {Foo => StackAllocator<'static>, unsafe { StackAllocator::new(&mut STACK) }}
         let box1 = Box::new_in(42_u32, Foo).unwrap();
         assert_eq!(box1.get(), &42);
-        assert!(Box::new_in(69_u32, Foo).is_none()); // not enough room for allocation
+        assert!(Box::new_in(69_u32, Foo).is_err()); // not enough room for allocation
         drop(box1);
         let box2 = Box::new_in(69_u32, Foo).unwrap();
         assert_eq!(box2.get(), &69);
